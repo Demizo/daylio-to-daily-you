@@ -82,7 +82,7 @@ for row in csv_reader:
         'timeCreated': time_created,
         'timeModified': time_modified,
         'imgPath': img_path,
-        'mood': mood_mapping.get(mood, 0),
+        'mood': mood_mapping.get(mood, None),
         'text': text
     }
     
