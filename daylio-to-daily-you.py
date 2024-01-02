@@ -18,11 +18,11 @@ mood_mapping = {
 parser = argparse.ArgumentParser(description='Convert Daylio entries to Daily You.')
 
 parser.add_argument('csv', type=str, help='Input CSV file')
-parser.add_argument('--images', help='Import images.', action='store_true')
+parser.add_argument('--images', help='Folder of images to import.')
 
 args = parser.parse_args()
 csv_file_path = args.csv
-import_images = args.images
+import_image_folder = args.images
 
 # Check if CSV file exists
 if not os.path.isfile(csv_file_path):
@@ -41,16 +41,20 @@ for row in csv_reader:
     time_modified = datetime.datetime.now().isoformat()
 
     # Handle images
-    if import_images:
+    if import_image_folder:
         entry_date = datetime.datetime.strptime(row['full_date'], '%Y-%m-%d')
         
-        # Look for images in the pic folder that match the entry date
-        pic_folder = 'pic'
         image_paths = []
 
-        for file_name in os.listdir(pic_folder):
+        # Check if image folder exists
+        if not os.path.exists(import_image_folder):
+            print(f'Error: folder {import_image_folder} does not exist')
+            sys.exit(1)
+        
+        # Search for images for the current day
+        for file_name in os.listdir(import_image_folder):
             if file_name.startswith(f'photo_{entry_date.year}_{str(entry_date.month).zfill(2)}_{str(entry_date.day).zfill(2)}'):
-                image_paths.append(os.path.join(pic_folder, file_name))
+                image_paths.append(os.path.join(import_image_folder, file_name))
 
         if len(image_paths) > 0:
             image_path = image_paths[0]
@@ -61,6 +65,7 @@ for row in csv_reader:
             # Rename the image to the expected format
             new_img_name = 'daily_you_' + str(entry_date.month) + '_' + str(entry_date.day) + '_' + str(entry_date.year) + '.jpg'
             new_path = os.path.join('output', new_img_name)
+            os.makedirs('output', exist_ok=True)
             with open(image_path, 'rb') as source_file, open(new_path, 'wb') as dest_file:
                 dest_file.write(source_file.read())
             
@@ -85,5 +90,6 @@ for row in csv_reader:
 
 # Save the JSON
 output_file_path = 'output/daily_you_logs.json'
+os.makedirs('output', exist_ok=True)
 with open(output_file_path, 'w') as json_file:
     json.dump(json_array, json_file, indent=2)
